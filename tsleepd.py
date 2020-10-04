@@ -201,7 +201,7 @@ def handle_api_update(d):
                 logger_botapi.info('Command: /%s %s' % (cmd, expr))
                 COMMANDS[cmd](expr, msg['chat']['id'], msg['message_id'], msg)
             elif msg['chat']['type'] == 'private':
-                sendmsg(_('Invalid command. Send /help for help.'), msg['chat']['id'], msg['message_id'])
+                sendmsg(('Invalid command. Send /help for help.'), msg['chat']['id'], msg['message_id'])
             else:
                 update_user_group(msg['from'], msg['chat'])
         except Exception:
@@ -545,7 +545,7 @@ def cmd_status(expr, chatid, replyid, msg):
     if expr and expr[0] == '@':
         uid = db_getuidbyname(expr[1:])
         if not uid:
-            sendmsg(_('User not found.'), chatid, replyid)
+            sendmsg(('User not found.'), chatid, replyid)
             return
     elif 'reply_to_message' in msg:
         uid = msg['reply_to_message']['from']['id']
@@ -554,7 +554,7 @@ def cmd_status(expr, chatid, replyid, msg):
     else:
         uid = msg['from']['id']
         if uid not in USER_CACHE:
-            sendmsg(_('Please first /subscribe.'), chatid, replyid)
+            sendmsg(('Please first /subscribe.'), chatid, replyid)
             return
     if uid:
         usertz = pytz.timezone(USER_CACHE[uid]['timezone'])
@@ -565,7 +565,7 @@ def cmd_status(expr, chatid, replyid, msg):
                             lastseen, usertz)
         else:
             userseendelta = None
-        text = [_('%s: local time is %s (%s)') % (
+        text = [('%s: local time is %s (%s)') % (
                 getufname(USER_CACHE[uid]), usertime.strftime('%H:%M'),
                 USER_CACHE[uid]['timezone'])]
         if USER_CACHE[uid]['subscribed']:
@@ -573,9 +573,9 @@ def cmd_status(expr, chatid, replyid, msg):
             if uid != msg['from']['id'] and userseendelta:
                 ndelta = humanizetime.naturaldelta(userseendelta)
                 if ndelta in (_("a moment"), _("now")):
-                    text.append(_('Online'))
+                    text.append(('Online'))
                 else:
-                    text.append(_('Last seen: %s ago') % ndelta)
+                    text.append(('Last seen: %s ago') % ndelta)
             cutstart, cutend = CFG['cutwindow']
             cutmid = (cutstart + cutend) / 2
             if start:
@@ -591,23 +591,23 @@ def cmd_status(expr, chatid, replyid, msg):
                 #   ^start  ^end+now
                 # we are not sure, so don't write the db
                 if interval and (complete or midnight_delta(end) > cutmid):
-                    text.append(_('Last sleep: %s, %s→%s') % (
+                    text.append(('Last sleep: %s, %s→%s') % (
                         hour_minutes(interval, False),
                         userstart.strftime('%H:%M'), end.strftime('%H:%M')))
                 # |     |     | and is current user
                 #    ^now
                 elif (uid == msg['from']['id'] and
                       cutstart < midnight_delta(usertime) < cutmid):
-                    text.append(_('Go to sleep!'))
+                    text.append(('Go to sleep!'))
                 # | x   |     |
                 #   ^start  ^now
                 #   ^s ^now
                 else:
-                    text.append(_('Sleep: %s→💤') % userstart.strftime('%H:%M'))
+                    text.append(('Sleep: %s→💤') % userstart.strftime('%H:%M'))
             else:
-                text.append(_('Not enough data.'))
+                text.append(('Not enough data.'))
         else:
-            text.append(_('Not subscribed.'))
+            text.append(('Not subscribed.'))
         sendmsg('\n'.join(text), chatid, replyid)
     else:
         update_group_members(msg['chat'])
@@ -634,11 +634,11 @@ def cmd_status(expr, chatid, replyid, msg):
         if validintervcount:
             avgstart = startsum/validstartcount
             avginterval = intrvsum/validintervcount
-            text.append(_('Average: %s, %s→%s') % (
+            text.append(('Average: %s, %s→%s') % (
                 hour_minutes(avginterval, False),
                 hour_minutes(midnight_adjust(avgstart)),
                 hour_minutes(midnight_adjust(avgstart + avginterval))))
-        sendmsg('\n'.join(text) or _('Not enough data.'), chatid, replyid)
+        sendmsg('\n'.join(text) or ('Not enough data.'), chatid, replyid)
 
 
 def user_average_sleep(usertz, iterable):
@@ -711,7 +711,7 @@ def cmd_average(expr, chatid, replyid, msg):
     else:
         uid = msg['from']['id']
         if uid not in USER_CACHE:
-            sendmsg(_('Please first /subscribe.'), chatid, replyid)
+            sendmsg(('Please first /subscribe.'), chatid, replyid)
             return
     text = []
     if uid:
@@ -719,22 +719,22 @@ def cmd_average(expr, chatid, replyid, msg):
         avgstart, avginterval = user_average_sleep(usertz, CONN.execute(
             'SELECT time, duration FROM sleep WHERE user = ?', (uid,)))
         if avgstart is not None:
-            text.append(_('Average: %s, %s→%s') % (hour_minutes(avginterval, False),
+            text.append(('Average: %s, %s→%s') % (hour_minutes(avginterval, False),
                 hour_minutes(midnight_adjust(avgstart)),
                 hour_minutes(midnight_adjust(avgstart + avginterval))))
         else:
-            text.append(_('Not enough data.'))
+            text.append(('Not enough data.'))
         if chatid > 0:
             avgstart, avginterval = group_average_sleep(None)
             if avgstart and avginterval:
-                text.append(_('Global average: %s, %s→%s') % (
+                text.append(('Global average: %s, %s→%s') % (
                     hour_minutes(avginterval, False),
                     hour_minutes(midnight_adjust(avgstart)),
                     hour_minutes(midnight_adjust(avgstart + avginterval))))
         else:
             avgstart, avginterval = group_average_sleep(msg['chat']['id'])
             if avgstart and avginterval:
-                text.append(_('Group average: %s, %s→%s') % (
+                text.append(('Group average: %s, %s→%s') % (
                     hour_minutes(avginterval, False),
                     hour_minutes(midnight_adjust(avgstart)),
                     hour_minutes(midnight_adjust(avgstart + avginterval))))
@@ -749,37 +749,37 @@ def cmd_average(expr, chatid, replyid, msg):
                     hour_minutes(interval, False),
                     hour_minutes(midnight_adjust(start)),
                     hour_minutes(midnight_adjust(start + interval))))
-            text.append(_('Group average: %s, %s→%s') % (
+            text.append(('Group average: %s, %s→%s') % (
                 hour_minutes(avginterval, False),
                 hour_minutes(midnight_adjust(avgstart)),
                 hour_minutes(midnight_adjust(avgstart + avginterval))))
         else:
-            text.append(_('Not enough data.'))
+            text.append(('Not enough data.'))
     sendmsg('\n'.join(text), chatid, replyid)
 
 
 def cmd_subscribe(expr, chatid, replyid, msg):
     '''/subscribe - Add you to the watchlist'''
     update_user(msg['from'], True)
-    sendmsg(_("%s, you are subscribed.") % getufname(msg['from']), chatid, replyid)
+    sendmsg(("%s, you are subscribed.") % getufname(msg['from']), chatid, replyid)
 
 
 def cmd_unsubscribe(expr, chatid, replyid, msg):
     '''/unsubscribe - Remove you from the watchlist'''
     update_user(msg['from'], False)
-    sendmsg(_("%s, you are unsubscribed.") % getufname(msg['from']), chatid, replyid)
+    sendmsg(("%s, you are unsubscribed.") % getufname(msg['from']), chatid, replyid)
 
 def cmd_settz(expr, chatid, replyid, msg):
     '''/settz - Set your timezone'''
     if expr and expr in pytz.all_timezones_set:
         update_user(msg['from'], timezone=expr)
-        sendmsg(_("Your timezone is %s now.") % expr, chatid, replyid)
+        sendmsg(("Your timezone is %s now.") % expr, chatid, replyid)
     else:
         try:
             current = USER_CACHE[msg['from']['id']]['timezone']
         except KeyError:
             current = CFG['defaulttz']
-        sendmsg(_("Invalid timezone. Your current timezone is %s.") % current, chatid, replyid)
+        sendmsg(("Invalid timezone. Your current timezone is %s.") % current, chatid, replyid)
 
 def cmd_time(expr, chatid, replyid, msg):
     '''/time - Get time for various timezones'''
@@ -795,7 +795,7 @@ def cmd_time(expr, chatid, replyid, msg):
                 ' ORDER BY count(users.timezone) DESC, users.timezone ASC',
                 (msg['chat']['id'],))]
     if tzs:
-        text = [_('The time is:')]
+        text = [('The time is:')]
         for tz in tzs:
             usertime = datetime.datetime.now(pytz.timezone(tz))
             text.append(' '.join((
@@ -804,11 +804,11 @@ def cmd_time(expr, chatid, replyid, msg):
             )))
         sendmsg('\n'.join(text), chatid, replyid)
     else:
-        sendmsg(_("No timezone specified."), chatid, replyid)
+        sendmsg(("No timezone specified."), chatid, replyid)
 
 def cmd_start(expr, chatid, replyid, msg):
     if chatid > 0:
-        sendmsg(_("This is Trusted Sleep Bot. It can track users' sleep habit by using Telegram online status. Send me /help for help."), chatid, replyid)
+        sendmsg(("This is Trusted Sleep Bot. It can track users' sleep habit by using Telegram online status. Send me /help for help."), chatid, replyid)
 
 def cmd_help(expr, chatid, replyid, msg):
     '''/help - Show usage'''
@@ -818,11 +818,11 @@ def cmd_help(expr, chatid, replyid, msg):
             if h:
                 sendmsg(h, chatid, replyid)
             else:
-                sendmsg(_('Help is not available for %s') % expr, chatid, replyid)
+                sendmsg(('Help is not available for %s') % expr, chatid, replyid)
         else:
-            sendmsg(_('Command not found.'), chatid, replyid)
+            sendmsg(('Command not found.'), chatid, replyid)
     else:
-        sendmsg('\n'.join(_(cmd.__doc__) for cmdname, cmd in COMMANDS.items() if cmd.__doc__), chatid, replyid)
+        sendmsg('\n'.join((cmd.__doc__) for cmdname, cmd in COMMANDS.items() if cmd.__doc__), chatid, replyid)
 
 def getufname(user, maxlen=100):
     name = user['first_name'] or ''
@@ -862,12 +862,20 @@ COMMANDS = collections.OrderedDict((
     ('start', cmd_start)
 ))
 
+LANGUAGE = 'zh_CN'
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
+TIME_ZONE = 'Asia/Shanghai'
+
+
+
 if __name__ == '__main__':
     CFG = load_config()
-    translation = gettext.translation('tsleepd', os.path.join(
-        os.path.dirname(os.path.abspath(os.path.realpath(sys.argv[0] or 'locale'))),
-        'locale'), CFG['languages'])
-    translation.install(('ngettext',))
+#    translation = gettext.translation('tsleepd', os.path.join(
+#        os.path.dirname(os.path.abspath(os.path.realpath(sys.argv[0] or 'locale'))),
+#       'locale'), CFG['languages'])
+#    translation.install(('ngettext',))
     DB, CONN = None, None
     MSG_Q = queue.Queue()
     USER_CACHE = {}
